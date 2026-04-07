@@ -28,18 +28,28 @@ class LLMPromptEnhancer:
     CATEGORY = "Prompt Helpers"
 
     def enhance_prompt(self, user_prompt, system_prompt, api_url, model_name, api_key, language_mode, max_new_tokens, temperature):
-        target_chinese_type = "Traditional Chinese" if language_mode == "繁體中文" else "Simplified Chinese"
+        # 根據選單決定語言指令
+        if language_mode == "繁體中文":
+            lang_instruction = "Traditional Chinese (繁體中文)"
+            negation_instruction = "Do NOT use Simplified Chinese characters."
+        else:
+            lang_instruction = "Simplified Chinese (简体中文)"
+            negation_instruction = "Do NOT use Traditional Chinese characters."
 
+        # 1. 強制 LLM 輸出的 Prompt 工程 (加強版)
         internal_system_prompt = (
             f"{system_prompt}\n\n"
-            f"CRITICAL INSTRUCTION: You must respond ONLY with a valid JSON object. "
-            f"The 'chinese_prompt' field must be written in {target_chinese_type}. "
-            f"Do not include any markdown formatting, code blocks, or explanations. "
+            f"### LANGUAGE REQUIREMENT ###\n"
+            f"The 'chinese_prompt' field MUST be written strictly in {lang_instruction}.\n"
+            f"{negation_instruction}\n"
+            f"### FORMAT REQUIREMENT ###\n"
+            f"You must respond ONLY with a valid JSON object. "
+            f"Do not include any markdown formatting, code blocks, or extra text. "
             f"The JSON must contain exactly these two keys: 'chinese_prompt' and 'english_prompt'.\n"
             f"Example Output:\n"
             f"{{\"chinese_prompt\": \"內容...\", \"english_prompt\": \"content...\"}}"
         )
-
+        
         payload = {
             "model": model_name,
             "messages": [
