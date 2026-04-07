@@ -28,32 +28,42 @@ class LLMPromptEnhancer:
     CATEGORY = "Prompt Helpers"
 
     def enhance_prompt(self, user_prompt, system_prompt, api_url, model_name, api_key, language_mode, max_new_tokens, temperature):
-        # 根據選單決定語言指令
+        # 1. 根據選單決定語言指令 (保持英文描述，增加模型理解度)
         if language_mode == "繁體中文":
             lang_instruction = "Traditional Chinese (繁體中文)"
-            negation_instruction = "Do NOT use Simplified Chinese characters."
+            negation_instruction = "DO NOT use Simplified Chinese characters."
         else:
             lang_instruction = "Simplified Chinese (简体中文)"
-            negation_instruction = "Do NOT use Traditional Chinese characters."
+            negation_instruction = "DO NOT use Traditional Chinese characters."
 
-        # 1. 強制 LLM 輸出的 Prompt 工程 (加強版)
-        internal_system_prompt = (
-            f"{system_prompt}\n\n"
-            f"### LANGUAGE REQUIREMENT ###\n"
-            f"The 'chinese_prompt' field MUST be written strictly in {lang_instruction}.\n"
-            f"{negation_instruction}\n"
-            f"### FORMAT REQUIREMENT ###\n"
-            f"You must respond ONLY with a valid JSON object. "
-            f"Do not include any markdown formatting, code blocks, or extra text. "
-            f"The JSON must contain exactly these two keys: 'chinese_prompt' and 'english_prompt'.\n"
-            f"Example Output:\n"
-            f"{{\"chinese_prompt\": \"內容...\", \"english_prompt\": \"content...\"}}"
-        )
+        # 2. 構建強化的系統指令
+        # 我們將使用者的 system_prompt 當作「任務目標」，但用英文來加強「語言規範」
         
+        # 這裡我們把邏輯跟使用者的指令分開
+        logic_prefix = (
+            "### CORE INSTRUCTION ###\n"
+            "You are an AI assistant helping with prompt engineering. "
+            "Follow the user's task instructions below, but you MUST strictly adhere to the language requirements.\n\n"
+            "### LANGUAGE REQUIREMENT ###\n"
+            f"The 'chinese_prompt' field MUST be written strictly in {lang_instruction}.\n"
+            f"{negation_instruction}\n\n"
+            "### FORMAT REQUIREMENT ###\n"
+            "You must respond ONLY with a valid JSON object. "
+            "Do not include any markdown formatting, code blocks, or extra text.\n"
+            "The JSON must contain exactly these two keys: 'chinese_prompt' and 'english_prompt'.\n"
+            "Example Output:\n"
+            f"{{\"chinese_prompt\": \"...\", \"english_prompt\": \"...\"}}\n\n"
+            "### USER TASK DESCRIPTION ###\n"
+        )
+
+        # 組合最終的指令：邏輯(英文) + 使用者任務(使用者輸入)
+        final_system_prompt = logic_prefix + system_prompt
+
+        # 3. 準備 Payload
         payload = {
             "model": model_name,
             "messages": [
-                {"role": "system", "content": internal_system_prompt},
+                {"role": "system", "content": final_system_prompt},
                 {"role": "user", "content": f"Task: Enhance this prompt: {user_prompt}"}
             ],
             "max_tokens": max_new_tokens,
