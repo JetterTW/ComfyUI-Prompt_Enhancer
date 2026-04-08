@@ -23,11 +23,12 @@
 1. 進入您的 `ComfyUI/custom_nodes` 目錄。
 2. 使用 Git 下載本專案：
    ```bash
+   cd /comfyui/custom_nodes
    git clone https://github.com/JetterTW/ComfyUI-Prompt_Enhancer.git
    
 3. 進入資料夾並確保已安裝依賴套件：
    ```bash
-   pip install requests
+   pip install -r requirements.txt
 
 4. 重啟 ComfyUI。
 
