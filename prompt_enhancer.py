@@ -1,7 +1,6 @@
 import torch
 import requests
 import json
-import re
 
 class LLMPromptEnhancer:
     def __init__(self):
@@ -12,89 +11,51 @@ class LLMPromptEnhancer:
         return {
             "required": {
                 "user_prompt": ("STRING", {"multiline": True, "default": "A girl in a coffee shop"}),
-                "system_prompt": ("STRING", {
-                    "multiline": True, 
-                    "default": "You are a professional Stable Diffusion prompt engineer. Expand the user's description into a detailed, high-quality visual prompt."
-                }),
+                "system_prompt": ("STRING", {"multiline": True, "default": "You are a professional Stable Diffusion prompt engineer. Expand the user's description into a detailed, high-quality visual prompt."}),
                 "api_url": ("STRING", {"default": "http://127.0.0.1:1234/v1/chat/completions"}), 
                 "model_name": ("STRING", {"default": "gemma4"}),
                 "api_key": ("STRING", {"default": "not-needed"}),
-                "max_new_tokens": ("INT", {"default": 4096, "min": 1, "max": 16384}),
+                "max_new_tokens": ("INT", {"default": 2048, "min": 1, "max": 8192}),
                 "temperature": ("FLOAT", {"default": 0.7, "min": 0.0, "max": 2.0, "step": 0.1}),
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING") # 這裡我改回最穩定的三個預定義名稱
+    # 修改輸出為三個字串
+    RETURN_TYPES = ("STRING", "STRING", "STRING")
     RETURN_NAMES = ("英文 Prompt", "繁體中文 Prompt", "簡體中文 Prompt")
     FUNCTION = "enhance_prompt"
     CATEGORY = "Prompt Helpers"
 
-    def robust_json_loads(self, content):
-        # 1. 移除所有思考標籤 (處理 DeepSeek/Llama 的 <think> 內容)
-        clean_content = re.sub(r'<think>.*?</think>', '', content, flags=re.DOTALL)
-        clean_content = re.sub(r'&lt;think&gt;.*?&lt;/think&gt;', '', clean_content, flags=re.DOTALL)
-        clean_content = clean_content.strip()
-
-        # 2. 打印 Debug 資訊 (在 ComfyUI 黑色視窗查看)
-        print("\n" + "="*50)
-        print("DEBUG: LLM CLEANED OUTPUT START")
-        print(clean_content)
-        print("DEBUG: LLM CLEANED OUTPUT END")
-        print("="*50 + "\n")
-
-        # 3. 尋找 JSON 邊界
-        start_idx = clean_content.find('{')
-        end_idx = clean_content.rfind('}')
-        
-        if start_idx != -1 and end_idx != -1:
-            clean_content = clean_content[start_idx:end_idx+1]
-        elif start_idx != -1:
-            clean_content = clean_content[start_idx:] + '"}'
-
-        # 4. 解析 JSON
-        try:
-            return json.loads(clean_content)
-        except Exception:
-            print("Warning: JSON parsing failed. Using Regex mode...")
-            result = {
-                "english_prompt": "Error: Parse failed",
-                "traditional_chinese_prompt": "Error: Parse failed",
-                "simplified_chinese_prompt": "Error: Parse failed"
-            }
-            patterns = {
-                "english_prompt": r'"english_prompt"\s*:\s*"([^"]*)"',
-                "traditional_chinese_prompt": r'"traditional_chinese_prompt"\s*:\s*"([^"]*)"',
-                "simplified_chinese_prompt": r'"simplified_chinese_prompt"\s*:\s*"([^"]*)"'
-            }
-            for key, pattern in patterns.items:
-                match = re.search(pattern, clean_content, re.DOTALL | re.IGNORECASE)
-                if match:
-                    result[key] = match.group(1)
-            return result
-
     def enhance_prompt(self, user_prompt, system_prompt, api_url, model_name, api_key, max_new_tokens, temperature):
-        instruction = (
-            "### RULES ###\n"
-            "1. Output ONLY valid JSON.\n"
-            "2. Use SINGLE QUOTES (') inside text.\n"
-            "3. Do not use Markdown blocks.\n\n"
+        # 強化指令：明確要求輸出三個欄位，並定義好語言
+        internal_system_prompt = (
             f"{system_prompt}\n\n"
-            "### STRUCTURE ###\n"
-            "Keys: 'english_prompt', 'traditional_chinese_prompt', 'simplified_chinese_prompt'."
+            "### OUTPUT FORMAT ###\n"
+            "You must respond ONLY with a valid JSON object. "
+            "Do not include any markdown formatting or code blocks. "
+            "The JSON must contain exactly these three keys:\n"
+            "1. 'english_prompt': The detailed English visual prompt.\n"
+            "2. 'traditional_chinese_prompt': The translation in Traditional Chinese.\n"
+            "3. 'simplified_chinese_prompt': The translation in Simplified Chinese.\n\n"
+            "Example Output:\n"
+            "{\"english_prompt\": \"...\", \"traditional_chinese_prompt\": \"...\", \"simplified_chinese_prompt\": \"...\"}"
         )
 
         payload = {
             "model": model_name,
             "messages": [
-                {"role": "system", "content": instruction},
-                {"role": "user", "content": f"Task: Expand and translate: {user_prompt}"}
+                {"role": "system", "content": internal_system_prompt},
+                {"role": "user", "content": f"Task: Expand and translate this prompt: {user_prompt}"}
             ],
             "max_tokens": max_new_tokens,
             "temperature": temperature,
             "response_format": { "type": "json_object" } 
         }
 
-        headers = {"Content-Type": "application/json", "Authorization": f"Bearer {api_key}"}
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
 
         try:
             response = requests.post(api_url, headers=headers, json=payload, timeout=120)
@@ -102,23 +63,30 @@ class LLMPromptEnhancer:
             res_json = response.json()
             content = res_json['choices'][0]['message']['content']
             
-            data = self.robust_json_loads(content)
+            # 清理 Markdown
+            if "```json" in content:
+                content = content.split("```json")[1].split("```")[0].strip()
+            elif "```" in content:
+                content = content.split("```")[1].split("```")[0].strip()
             
-            en = data.get("english_prompt", "Error: missing")
-            tc = data.get("traditional_chinese_prompt", "Error: missing")
-            sc = data.get("simplified_chinese_prompt", "Error: missing")
+            data = json.loads(content)
             
-            return (en, tc, sc)
-        except Exception as e:
-            err = f"Error: {str(e)}"
-            print(f"LLM Node Error: {err}")
-            return (err, err, err)
+            # 取得三個欄位
+            english_out = data.get("english_prompt", "Error: english_prompt missing")
+            traditional_out = data.get("traditional_chinese_prompt", "Error: traditional missing")
+            simplified_out = data.get("simplified_chinese_prompt", "Error: simplified missing")
+            
+            return (english_out, traditional_out, simplified_out)
 
-# 註冊節點
+        except Exception as e:
+            error_msg = f"Error: {str(e)}"
+            print(f"LLM Node Error: {error_msg}")
+            return (error_msg, error_msg, error_msg)
+
 NODE_CLASS_MAPPINGS = {
     "LLMPromptEnhancer": LLMPromptEnhancer
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LLMPromptEnhancer": "LLM Prompt Enhancer"
+    "LLMPromptEnhancer": "LLM Prompt Enhancer (Triple Language)"
 }
