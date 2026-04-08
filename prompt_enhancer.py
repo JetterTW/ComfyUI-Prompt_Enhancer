@@ -3,7 +3,7 @@ import requests
 import json
 import re
 
-class LLMPromtEnhancer:
+class LLMPromptEnhancer:
     def __init__(self):
         pass
 
