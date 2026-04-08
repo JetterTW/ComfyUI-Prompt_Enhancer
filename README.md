@@ -23,7 +23,6 @@
 1. 進入您的 `ComfyUI/custom_nodes` 目錄。
 2. 使用 Git 下載本專案：
    ```bash
-   cd /comfyui/custom_nodes
    git clone https://github.com/JetterTW/ComfyUI-Prompt_Enhancer.git
    
 3. 進入資料夾並確保已安裝依賴套件：
@@ -41,7 +40,6 @@
 | `api_url` | STRING | `http://127.0.0.1:1234/v1/chat/completions` | LLM API 的端點網址。 |
 | `model_name` | STRING | `gemma4` | 指定要使用的模型名稱。 |
 | `api_key` | STRING | `not-needed` | API 認證金鑰 (本地模型通常填 `not-needed`)。 |
-| `language_mode` | COMBO | `繁體中文` | 選擇中文輸出格式：`繁體中文` 或 `簡體中文`。 |
 | `max_new_tokens` | INT | `2048` | 生成文字的最大長度上限。 |
 | `temperature` | FLOAT | `0.7` | 創意程度 (0.0 - 2.0)。越高越具想像力。 |
 
