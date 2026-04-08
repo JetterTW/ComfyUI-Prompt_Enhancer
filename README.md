@@ -22,11 +22,11 @@
 
 1. 進入您的 `ComfyUI/custom_nodes` 目錄。
 2. 使用 Git 下載本專案：
-
+   ```bash
    git clone https://github.com/JetterTW/ComfyUI-Prompt_Enhancer.git
-
+   
 3. 進入資料夾並確保已安裝依賴套件：
-
+   ```bash
    pip install requests
 
 4. 重啟 ComfyUI。
@@ -49,18 +49,16 @@
 ### 場景一：使用本地 LM Studio (完全隱私)
 * **api_url**: `http://127.0.0.1:1234/v1/chat/completions`
 * **model_name**: `local-model`
-* **language_mode**: `繁體中文`
 
-### 場景二：使用遠端伺服器 (例如連線到 192.168.1.9)
+### 場景二：使用遠端伺服器 (例如vLLM, Ollama...連線到 192.168.1.9)
 * **api_url**: `http://192.168.1.9:8000/v1/chat/completions`
 * **model_name**: `gemma4`
-* **language_mode**: `簡體中文`
 
 ## 📋 推薦工作流 (Workflow)
 
 1. **Input**: 使用 `LLM Prompt Enhancer` 節點輸入簡單想法。
 2. **Generation**: 將 **英文 Prompt** 輸出端連接至 `CLIP Text Encode`。
-3. **Review**: 將 **中文 Prompt** 輸出端連接至 `Show Text` 節點，以便確認 AI 增強後的細節是否符合預期。
+3. **Review**: 將 **繁體中文 Prompt** 或 **簡體中文 Prompt** 輸出端連接至 `Show Text` 節點，以便確認 AI 增強後的細節是否符合預期。
 
 ## ⚠️ 注意事項
 
