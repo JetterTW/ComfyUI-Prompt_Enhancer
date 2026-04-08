@@ -116,9 +116,9 @@ class LLMPromptEnhancer:
 
 # 註冊節點
 NODE_CLASS_MAPPINGS = {
-    "LLMPromptEnhancer": LLMPromptEnh_Final
+    "LLMPromptEnhancer": LLMPromptEnhancer
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LLMPromptEnhancer": "LLM Prompt Enh_Ultimate"
+    "LLMPromptEnhancer": "LLM Prompt Enhancer"
 }
