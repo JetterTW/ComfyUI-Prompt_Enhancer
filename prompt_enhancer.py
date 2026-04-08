@@ -13,7 +13,7 @@ class LLMPromptEnhancer:
             "required": {
                 "user_prompt": ("STRING", {"multiline": True, "default": "A girl in a coffee shop"}),
                 "system_prompt": ("STRING", {
-                    "multline": True, 
+                    "multiline": True, 
                     "default": "You are a professional Stable Diffusion prompt engineer. Expand the user's description into a detailed, high-quality visual prompt."
                 }),
                 "api_url": ("STRING", {"default": "http://127.0.0.1:1234/v1/chat/completions"}), 
@@ -24,7 +24,7 @@ class LLMPromptEnhancer:
             },
         }
 
-    RETURN_TYPES = ("STRING", "STRING", "STRING")
+    RETURN_TYPES = ("STRING", "STRING", "STRING") # 這裡我改回最穩定的三個預定義名稱
     RETURN_NAMES = ("英文 Prompt", "繁體中文 Prompt", "簡體中文 Prompt")
     FUNCTION = "enhance_prompt"
     CATEGORY = "Prompt Helpers"
@@ -49,18 +49,15 @@ class LLMPromptEnhancer:
         if start_idx != -1 and end_idx != -1:
             clean_content = clean_content[start_idx:end_idx+1]
         elif start_idx != -1:
-            # 處理 Token 用完導致 JSON 不完整的情況
             clean_content = clean_content[start_idx:] + '"}'
 
-        # 4. 嘗試解析 JSON
+        # 4. 解析 JSON
         try:
             return json.loads(clean_content)
         except Exception:
-            # 5. 備援方案：使用正則表達式提取欄位 (當 JSON 結構被破壞時)
             print("Warning: JSON parsing failed. Using Regex mode...")
             result = {
                 "english_prompt": "Error: Parse failed",
- 
                 "traditional_chinese_prompt": "Error: Parse failed",
                 "simplified_chinese_prompt": "Error: Parse failed"
             }
@@ -69,19 +66,18 @@ class LLMPromptEnhancer:
                 "traditional_chinese_prompt": r'"traditional_chinese_prompt"\s*:\s*"([^"]*)"',
                 "simplified_chinese_prompt": r'"simplified_chinese_prompt"\s*:\s*"([^"]*)"'
             }
-            for key, pattern in patterns.items():
+            for key, pattern in patterns.items:
                 match = re.search(pattern, clean_content, re.DOTALL | re.IGNORECASE)
                 if match:
                     result[key] = match.group(1)
             return result
 
     def enhance_prompt(self, user_prompt, system_prompt, api_url, model_name, api_key, max_new_tokens, temperature):
-        # 強化指令：要求使用單引號，避免破壞 JSON 結構
         instruction = (
             "### RULES ###\n"
             "1. Output ONLY valid JSON.\n"
-            "2. Use SINGLE QUOTES (') inside the text to avoid breaking JSON.\n"
-            "3. Do not use Markdown code blocks.\n\n"
+            "2. Use SINGLE QUOTES (') inside text.\n"
+            "3. Do not use Markdown blocks.\n\n"
             f"{system_prompt}\n\n"
             "### STRUCTURE ###\n"
             "Keys: 'english_prompt', 'traditional_chinese_prompt', 'simplified_chinese_prompt'."
@@ -120,9 +116,9 @@ class LLMPromptEnhancer:
 
 # 註冊節點
 NODE_CLASS_MAPPINGS = {
-    "LLMPromptEnhancer": LLMPromptEnhancer
+    "LLMPromptEnhancer": LLMPromptEnh_Final
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LLMPromptEnhancer": "LLM Prompt Enhancer (Multi-Lang)"
+    "LLMPromptEnhancer": "LLM Prompt Enh_Ultimate"
 }
