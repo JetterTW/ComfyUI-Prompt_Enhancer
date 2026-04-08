@@ -68,6 +68,7 @@
 ## 🤝 貢獻與回報
 
 如果您發現任何問題或有改進建議，歡迎提交 [Issue](https://github.com/JetterTW/ComfyUI-Prompt_Enhancer/issues) 或 [Pull Request](https://github.com/JetterTW/ComfyUI-Prompt_Enhancer/pulls)。
+也可以請我[喝杯咖啡](https://p.ecpay.com.tw/778EAAD)。
 
 ---
 
