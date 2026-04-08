@@ -118,10 +118,11 @@ class LLMPromtEnhancer:
             print(f"LLM Node Error: {err}")
             return (err, err, err)
 
+# 註冊節點
 NODE_CLASS_MAPPINGS = {
     "LLMPromptEnhancer": LLMPromptEnhancer
 }
 
 NODE_DISPLAY_NAME_MAPPINGS = {
-    "LLMPromptEnhancer": "LLM Prompt Enh_Ultimate"
+    "LLMPromptEnhancer": "LLM Prompt Enhancer (Multi-Lang)"
 }
