@@ -59,6 +59,9 @@
 2. **Generation**: 將 **英文 Prompt** 輸出端連接至 `CLIP Text Encode`。
 3. **Review**: 將 **繁體中文 Prompt** 或 **簡體中文 Prompt** 輸出端連接至 `Show Text` 節點，以便確認 AI 增強後的細節是否符合預期。
 
+## 系統提示詞範例
+檔案 [SystemPrompt.md](SystemPrompt.md) 有一些系統提示詞的範例可以參考
+
 ## ⚠️ 注意事項
 
 * **URL 格式**：請確保 API URL 指向的是 `/chat/completions` 結尾的完整路徑。
